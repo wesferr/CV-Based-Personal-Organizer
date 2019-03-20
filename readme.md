@@ -1,10 +1,11 @@
-Welcome to the TCC wiki!
+## Articles Libraries:
 
-Articles Libraries: ACMDL & IEEE Xplore.
+ACMDL & IEEE Xplore.
 
-Search String:  "augmented reality" AND ("android" OR "low-cost")
+## Search String:
+"augmented reality" AND ("android" OR "low-cost")
 
-Inclusion:
+## Inclusion:
 
 Of the AR/VR area.
 
@@ -12,7 +13,7 @@ Free for download.
 
 Articles in portuguese or english.
 
-Exclusion:
+## Exclusion:
 
 Articles using Microsoft Hololens.
 
