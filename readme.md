@@ -1,14 +1,15 @@
 ## Articles Libraries:
 
-ACMDL & IEEE Xplore.
+ACMDL & IEEE Xplore & SCOPUS.
 
 ## Search String:
 
-TITLE-ABS-KEY ( "indoor"  AND  "objects"  AND  ( "retrieval"  OR  "location"  OR  "log" ) )  AND  ( LIMIT-TO ( SUBJAREA ,  "COMP" ) ) 
+"image" AND "based" AND "indoor"  AND  "objects"  AND  ( "retrieval"  OR  "location")
 
 ## Inclusion:
 
-*
+* Trabalhos que propoem o uso de imagens para localizar objetos em ambientes indoor
+* Tabalhos que apresentem estratégias de extração de descritores e metadados de imagens de forma eficiente
 
 ## Exclusion:
 
