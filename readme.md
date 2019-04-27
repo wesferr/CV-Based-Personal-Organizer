@@ -13,6 +13,7 @@ ACMDL & IEEE Xplore & SCOPUS.
 
 ## Exclusion:
 
+* Trabalho referente a lozalização e rastreamento de pessoas 
 * Trabalho que não está escrito em português ou inglês;
 * Trabalho com menos de quatro paginas.
 * Trabalho que não esteja disponível para download, de forma gratuita, através de bases de dados acessíveis pela Universidade Federal do Pampa (UNIPAMPA).
