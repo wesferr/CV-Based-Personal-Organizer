@@ -8,7 +8,7 @@ ACMDL & IEEE Xplore & SCOPUS.
 
 ## Inclusion:
 
-* Trabalhos que propoem o uso de imagens para localizar objetos em ambientes indoor
+* Trabalhos que propoem o uso de imagens para localizar objetos perdidos ou guardados 
 * Tabalhos que apresentem estratégias de extração de descritores e metadados de imagens de forma eficiente
 
 ## Exclusion:
