@@ -8,7 +8,7 @@ ACMDL & IEEE Xplore & SCOPUS.
 
 ## Inclusion:
 
-* Trabalhos que propoem o uso de imagens para localizar objetos perdidos ou guardados 
+* Trabalhos que propoem o uso de imagens para localizar objetos perdidos ou guardados ou catalogados
 * Tabalhos que apresentem estratégias de extração de descritores e metadados de imagens de forma eficiente
 
 ## Exclusion:
