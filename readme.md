@@ -23,3 +23,4 @@ ACMDL & IEEE Xplore & SCOPUS.
 * Trabalho referente a localização e rastreamento de pessoas;
 * Trabalho que não está escrito em português ou inglês;
 * Trabalho com menos de quatro paginas.
+* Anais completos de eventos.
