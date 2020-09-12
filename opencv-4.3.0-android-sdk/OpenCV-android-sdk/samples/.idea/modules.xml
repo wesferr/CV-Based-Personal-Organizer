@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/15-puzzle/15-puzzle.iml" filepath="$PROJECT_DIR$/15-puzzle/15-puzzle.iml" group="opencv_samples/15-puzzle" />
+      <module fileurl="file://$PROJECT_DIR$/camera-calibration/camera-calibration.iml" filepath="$PROJECT_DIR$/camera-calibration/camera-calibration.iml" group="opencv_samples/camera-calibration" />
+      <module fileurl="file://$PROJECT_DIR$/color-blob-detection/color-blob-detection.iml" filepath="$PROJECT_DIR$/color-blob-detection/color-blob-detection.iml" group="opencv_samples/color-blob-detection" />
+      <module fileurl="file://$PROJECT_DIR$/face-detection/face-detection.iml" filepath="$PROJECT_DIR$/face-detection/face-detection.iml" group="opencv_samples/face-detection" />
+      <module fileurl="file://$PROJECT_DIR$/image-manipulations/image-manipulations.iml" filepath="$PROJECT_DIR$/image-manipulations/image-manipulations.iml" group="opencv_samples/image-manipulations" />
+      <module fileurl="file://$PROJECT_DIR$/opencv_samples.iml" filepath="$PROJECT_DIR$/opencv_samples.iml" group="opencv_samples" />
+      <module fileurl="file://$PROJECT_DIR$/../sdk/sdk-opencv.iml" filepath="$PROJECT_DIR$/../sdk/sdk-opencv.iml" group="opencv_samples/opencv" />
+      <module fileurl="file://$PROJECT_DIR$/tutorial-1-camerapreview/tutorial-1-camerapreview.iml" filepath="$PROJECT_DIR$/tutorial-1-camerapreview/tutorial-1-camerapreview.iml" group="opencv_samples/tutorial-1-camerapreview" />
+      <module fileurl="file://$PROJECT_DIR$/tutorial-2-mixedprocessing/tutorial-2-mixedprocessing.iml" filepath="$PROJECT_DIR$/tutorial-2-mixedprocessing/tutorial-2-mixedprocessing.iml" group="opencv_samples/tutorial-2-mixedprocessing" />
+      <module fileurl="file://$PROJECT_DIR$/tutorial-3-cameracontrol/tutorial-3-cameracontrol.iml" filepath="$PROJECT_DIR$/tutorial-3-cameracontrol/tutorial-3-cameracontrol.iml" group="opencv_samples/tutorial-3-cameracontrol" />
+    </modules>
+  </component>
+</project>
