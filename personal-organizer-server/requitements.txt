@@ -1,0 +1,6 @@
+opencv-python
+dlib
+flask
+moviepy
+google-cloud-speech
+pydub

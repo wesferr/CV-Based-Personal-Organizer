@@ -1,3 +1,4 @@
+import os
 from flask import Flask
 from flask import request
 from audio_processor import extract_audio
@@ -5,6 +6,13 @@ from object_detector import track
 from datetime import datetime
 
 import base64
+
+if not os.path.exists("./files"):
+    os.makedirs("./files/videos")
+    os.makedirs("./files/audios")
+    os.makedirs("./files/outputs")
+    os.makedirs("./files/images")
+
 
 video_url = "files/videos/{}.mp4"
 audio_url = "files/audios/{}.wav"
