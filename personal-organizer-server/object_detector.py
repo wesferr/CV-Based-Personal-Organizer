@@ -84,6 +84,9 @@ class VideoTracker(object):
                 assert False, "0x002"
 
             # saindo quando atingir a percentagem minima de descritores compativeis
+            if self.debug:
+                print(int(self.match_count * self.exit_per), len(matches), cv2.Laplacian(frame, cv2.CV_64F).var())
+                
             if int(self.match_count * self.exit_per) >= len(matches):
                 self.video.release()
                 self.debug_video.release()
