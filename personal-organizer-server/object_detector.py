@@ -21,8 +21,8 @@ class VideoTracker(object):
 
 
         if self.debug:
-            codec = cv2.VideoWriter_fourcc(*"MJPG")
-            self.debug_video = cv2.VideoWriter('files/debug_video.avi', codec, 10, self.resolution)
+            codec = cv2.VideoWriter_fourcc(*"mp4v")
+            self.debug_video = cv2.VideoWriter('files/debug_video.mp4', codec, 10, self.resolution)
 
     def __del__(self):
         self.video.release()
@@ -81,13 +81,13 @@ class VideoTracker(object):
             else:
                 self.video.release()
                 self.debug_video.release()
-                assert False, "0x000"
+                assert False, "0x002"
 
             # saindo quando atingir a percentagem minima de descritores compativeis
             if int(self.match_count * self.exit_per) >= len(matches):
                 self.video.release()
                 self.debug_video.release()
-                assert False, "0x000"
+                assert False, "0x003"
 
             # atualizando estado do rastreador e boundary box
             self.tracker.update(frame)
@@ -100,7 +100,7 @@ class VideoTracker(object):
 
         self.video.release()
         self.debug_video.release()
-        assert False, "0x000"
+        assert False, "0x004"
 
 
 if __name__ == '__main__':
