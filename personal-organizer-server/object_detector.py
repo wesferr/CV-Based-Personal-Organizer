@@ -2,87 +2,106 @@ from dlib import correlation_tracker, rectangle
 import cv2
 
 
-def get_frame(video, resolution=(640, 480)):
-    ok, frame = video.read()
-    if not ok:
-        return
-    frame = cv2.resize(frame, resolution)
-    height, width, color_size = frame.shape
-    return frame, height, width
+class VideoTracker(object):
+
+    def __init__(self, video_origin="sample-videos/livro.mp4", debug=False, resolution=(640, 480), exit_per=0.1):
+
+        # configurando o video
+        self.debug = debug
+        self.resolution = resolution
+        self.video = cv2.VideoCapture(video_origin)
+        assert self.video.isOpened(), "0x001"
+
+        #configurando rastreadores
+        self.match_count = 0
+        self.orb = cv2.ORB_create()
+        self.matcher = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+        self.tracker = correlation_tracker()
+        self.exit_per = exit_per
 
 
-def track(inicio="inicio.jpeg", fim='fim.jpg', entrada="files/videos/video_capturado.mp4"):
+        if self.debug:
+            codec = cv2.VideoWriter_fourcc(*"MJPG")
+            self.debug_video = cv2.VideoWriter('files/debug_video.avi', codec, 10, self.resolution)
 
-    # criando objeto de video a partir do aquivo
-    video = cv2.VideoCapture(entrada)
-    print(video)
+    def __del__(self):
+        self.video.release()
+        self.debug_video.release()
 
-    # criando rastreador de caracteristicas e matcher
-    orb = cv2.ORB_create()
-    matcher = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
-    match_count = 0
+    def get_frame(self):
+        ok, frame = self.video.read()
+        assert ok, "0x000"
+        frame = cv2.resize(frame, self.resolution)
+        height, width, color_size = frame.shape
+        return frame, height, width
 
-    # carregando quadro, redimencionando
-    try:
-        frame, height, width = get_frame(video)
-    except Exception as e:
-        video.release()
-        return
+    def crop_frame(self, frame, boundary_box):
+        top = int(boundary_box.top())
+        bottom = int(boundary_box.bottom())
+        left = int(boundary_box.left())
+        right = int(boundary_box.right())
+        return frame[top:bottom, left:right]
 
-    # carregando pontos e o rastreador
-    tracker = correlation_tracker()
-    boundary_box = rectangle(width // 4, height // 4, 3 * (width // 4), 3 * (height // 4))
-    tracker.start_track(frame, boundary_box)
+    def draw_frame(self, frame, boundary_box):
+        top = int(boundary_box.top())
+        bottom = int(boundary_box.bottom())
+        left = int(boundary_box.left())
+        right = int(boundary_box.right())
+        cv2.rectangle(frame, (left, top), (right, bottom), (255, 255, 255), 3)
 
-    imagem_base = frame[int(boundary_box.top()):int(boundary_box.bottom()), int(boundary_box.left()):int(boundary_box.right())]
-    base_keypoins, base_descriptors = orb.detectAndCompute(imagem_base, None)
 
-    while video.isOpened():
-        # carregando quadro e redimencionando
-        try:
-            frame, height, width = get_frame(video)
-        except Exception as e:
-            print("Sem quadros, finalizando.")
-            break
 
-        try:
-            imagem_teste = frame[int(boundary_box.top()):int(boundary_box.bottom()), int(boundary_box.left()):int(boundary_box.right())]
-            teste_keypoins, teste_descriptors = orb.detectAndCompute(imagem_teste, None)
-            matches = matcher.match(base_descriptors, teste_descriptors)
-        except Exception:
-            print("sem descritores")
-            break
+    def track(self):
 
-        if not match_count:
-            match_count = len(matches)
 
-        print(len(matches), int((match_count * 0.75)) + 1)
-        if (match_count // 10) + 1 >= len(matches):
-            break
-        # time.sleep(.2)
+        # carregando quadro, redimencionando
+        frame, height, width = self.get_frame()
 
-        # atualizando estado do rastreador e boundary box
-        tracker.update(frame)
-        boundary_box = tracker.get_position()
-        pt1 = (int(boundary_box.left()), int(boundary_box.top()))
-        pt2 = (int(boundary_box.right()), int(boundary_box.bottom()))
+        # carregando a fronteira de rastreamento        
+        boundary_box = rectangle(width // 3, height // 3, 2 * (width // 3), 2 * (height // 3))
 
-        # quadro e boundary box na tela até apertar esc
-        cv2.rectangle(frame, pt1, pt2, (255, 255, 255), 3)
-        # cv2.namedWindow("Image", cv2.WINDOW_NORMAL)
-        # cv2.startWindowThread()
-        # cv2.imshow("Image", frame)
-        # k = cv2.waitKey(1) & 0xff
-        # if k == 27:
-        #     break
+        # iniciando o rastreamento
+        self.tracker.start_track(frame, boundary_box)
 
-    print('saindo')
-    # liberando video
-    video.release()
-    # cv2.destroyAllWindows()
-    # cv2.waitKey(1)
-    return
+        # carregando a imagem base para rastrear e computando os descritores
+        imagem_base = self.crop_frame(frame, boundary_box)
+        base_keypoins, base_descriptors = self.orb.detectAndCompute(imagem_base, None)
+        self.match_count = len(base_descriptors)
+
+        while self.video.isOpened():
+
+            # carregando quadro e redimencionando
+            frame, height, width = self.get_frame()
+
+            # carregando e calculando os descritores de cada frame para match
+            imagem_teste = self.crop_frame(frame, boundary_box)
+            teste_keypoins, teste_descriptors = self.orb.detectAndCompute(imagem_teste, None)
+            if teste_keypoins:
+                matches = self.matcher.match(base_descriptors, teste_descriptors)
+            else:
+                self.video.release()
+                self.debug_video.release()
+                assert False, "0x000"
+
+            # saindo quando atingir a percentagem minima de descritores compativeis
+            if int(self.match_count * self.exit_per) >= len(matches):
+                self.video.release()
+                self.debug_video.release()
+                assert False, "0x000"
+
+            # atualizando estado do rastreador e boundary box
+            self.tracker.update(frame)
+            boundary_box = self.tracker.get_position()
+
+            if self.debug:
+                self.draw_frame(frame, boundary_box)
+                self.debug_video.write(frame)
+
+
+        self.video.release()
+        self.debug_video.release()
+        assert False, "0x000"
 
 
 if __name__ == '__main__':
-    track()
+    VideoTracker(debug=True).track()

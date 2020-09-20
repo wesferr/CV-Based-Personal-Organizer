@@ -2,7 +2,7 @@ import os
 from flask import Flask
 from flask import request
 from audio_processor import extract_audio
-from object_detector import track
+from object_detector import VideoTracker
 from datetime import datetime
 
 import base64
@@ -41,7 +41,16 @@ def main_process():
     write_file(data, now)
 
     extract_audio(video_url.format(now), audio_url.format(now), output_url.format(now))
-    track(in_image_url.format(now), out_image_url.format(now), video_url.format(now))
+
+    try:
+        VideoTracker(debug=True, video_origin=video_url.format(now)).track()
+    except Exception as e:
+        if str(e) == "0x000":
+            print("fim do video")
+        elif str(e) == "0x001":
+            print("problema com o carregamento do video")
+        else:
+            print(e)
 
     return "OK"
 
