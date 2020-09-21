@@ -58,6 +58,10 @@ class VideoTracker(object):
         # carregando quadro, redimencionando
         frame, height, width = self.get_frame()
 
+        while cv2.Laplacian(frame, cv2.CV_64F).var() < 20.0:
+            frame, height, width = self.get_frame()
+
+        cv2.imwrite("files/debug_image_entrada.jpeg", frame)
         # carregando a fronteira de rastreamento        
         boundary_box = rectangle(width // 3, height // 3, 2 * (width // 3), 2 * (height // 3))
 
@@ -80,8 +84,7 @@ class VideoTracker(object):
             if teste_keypoins:
                 matches = self.matcher.match(base_descriptors, teste_descriptors)
             else:
-                self.video.release()
-                self.debug_video.release()
+                cv2.imwrite("files/debug_image_saida.jpeg", frame)
                 assert False, "0x002"
 
             # saindo quando atingir a percentagem minima de descritores compativeis
@@ -89,8 +92,7 @@ class VideoTracker(object):
                 print(int(self.match_count * self.exit_per), len(matches), cv2.Laplacian(frame, cv2.CV_64F).var())
                 
             if int(self.match_count * self.exit_per) >= len(matches):
-                self.video.release()
-                self.debug_video.release()
+                cv2.imwrite("files/debug_image_saida.jpeg", frame)
                 assert False, "0x003"
 
             # atualizando estado do rastreador e boundary box
@@ -102,8 +104,7 @@ class VideoTracker(object):
                 self.debug_video.write(frame)
 
 
-        self.video.release()
-        self.debug_video.release()
+        cv2.imwrite("files/debug_image_saida.jpeg", frame)
         assert False, "0x004"
 
 
