@@ -36,19 +36,20 @@ class VideoTracker(object):
         return frame, height, width
 
     def crop_frame(self, frame, boundary_box):
-        top = int(boundary_box.top())
-        bottom = int(boundary_box.bottom())
-        left = int(boundary_box.left())
-        right = int(boundary_box.right())
+        top = int(boundary_box.top()) if boundary_box.top() > 0 else 0
+        bottom = int(boundary_box.bottom())  if boundary_box.bottom() > 0 else 0
+        left = int(boundary_box.left()) if boundary_box.left() > 0 else 0
+        right = int(boundary_box.right()) if boundary_box.right() > 0 else 0
+        print(top, bottom, left, right)
         return frame[top:bottom, left:right]
 
-    def draw_frame(self, frame, boundary_box):
-        top = int(boundary_box.top())
-        bottom = int(boundary_box.bottom())
-        left = int(boundary_box.left())
-        right = int(boundary_box.right())
-        cv2.rectangle(frame, (left, top), (right, bottom), (255, 255, 255), 3)
 
+    def draw_frame(self, frame, boundary_box):
+        top = int(boundary_box.top()) if boundary_box.top() > 0 else 0
+        bottom = int(boundary_box.bottom())  if boundary_box.bottom() > 0 else 0
+        left = int(boundary_box.left()) if boundary_box.left() > 0 else 0
+        right = int(boundary_box.right()) if boundary_box.right() > 0 else 0
+        cv2.rectangle(frame, (left, top), (right, bottom), (255, 255, 255), 3)
 
 
     def track(self):
