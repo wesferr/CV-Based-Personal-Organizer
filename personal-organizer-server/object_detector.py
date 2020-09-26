@@ -12,8 +12,10 @@ class VideoTracker(object):
         self.video = cv2.VideoCapture(video_origin)
         assert self.video.isOpened(), "0x001"
 
-        #configurando rastreadores
+        # configurarndo dicionario de palavras
         self.words = words
+
+        # configurando rastreadores
         self.match_count = 0
         self.orb = cv2.ORB_create()
         self.matcher = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
