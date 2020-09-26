@@ -12,6 +12,8 @@ class VideoTracker(object):
         self.video = cv2.VideoCapture(video_origin)
         assert self.video.isOpened(), "0x001"
 
+        # configurando a equalização de histograma adaptativa
+        self.clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
         # configurarndo dicionario de palavras
         self.words = words
 
@@ -35,6 +37,12 @@ class VideoTracker(object):
         ok, frame = self.video.read()
         assert ok, "0x000"
         frame = cv2.resize(frame, self.resolution)
+        # convertendo para Lab para equalizar a luminancia do quadro
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2Lab)
+        h, l, s = cv2.split(frame)
+        l = self.clahe.apply(l)
+        frame = cv2.merge((h, l, s))
+        frame = cv2.cvtColor(frame, cv2.COLOR_Lab2RGB)
         height, width, color_size = frame.shape
         return frame, height, width
 
