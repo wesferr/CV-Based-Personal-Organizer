@@ -112,4 +112,4 @@ class VideoTracker(object):
 
 
 if __name__ == '__main__':
-    VideoTracker(debug=True).track()
+    VideoTracker(debug=True, resolution=(1920, 1080)).track()
