@@ -37,9 +37,11 @@ def speech_to_text(audio_url, output_url):
 
                 log.write(u"PALAVRAS:\n")
                 for word in alternative.words:
-                    start = word.start_time.seconds + (word.start_time.nanos / 1000000000.0)
-                    end = word.end_time.seconds + (word.end_time.nanos / 1000000000.0)
+                    start = word.start_time.seconds + (word.start_time.nanos * 1e-9)
+                    end = word.end_time.seconds + (word.end_time.nanos * 1e-9)
                     log.write(u"word:{} start:{} end:{}\n".format(word.word, start, end))
+
+            return alternative.words
 
 
 def extract_audio(video_url, audio_url, output_url):

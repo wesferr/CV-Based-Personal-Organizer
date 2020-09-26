@@ -4,7 +4,7 @@ import cv2
 
 class VideoTracker(object):
 
-    def __init__(self, video_origin="sample-videos/livro.mp4", debug=False, resolution=(640, 480), exit_per=0.1):
+    def __init__(self, video_origin="sample-videos/cpf3.mp4", debug=False, resolution=(640, 480), exit_per=0.1, words=None):
 
         # configurando o video
         self.debug = debug

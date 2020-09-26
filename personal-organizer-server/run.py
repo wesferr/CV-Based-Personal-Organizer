@@ -40,10 +40,10 @@ def main_process():
     data = request.data
     write_file(data, now)
 
-    extract_audio(video_url.format(now), audio_url.format(now), output_url.format(now))
+    words = extract_audio(video_url.format(now), audio_url.format(now), output_url.format(now))
 
     try:
-        VideoTracker(debug=True, resolution=(1920, 1080), video_origin=video_url.format(now)).track()
+        VideoTracker(debug=True, resolution=(1920, 1080), video_origin=video_url.format(now), words=words).track()
     except Exception as e:
         if str(e) == "0x000":
             print("fim do video")
