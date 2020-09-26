@@ -1,4 +1,5 @@
 from dlib import correlation_tracker, rectangle
+from datetime import timedelta
 import cv2
 
 
@@ -11,6 +12,11 @@ class VideoTracker(object):
         self.resolution = resolution
         self.video = cv2.VideoCapture(video_origin)
         assert self.video.isOpened(), "0x001"
+
+        # configurando FPS contagem de frames e tempo de reprodução
+        self.video_fps = self.video.get(cv2.CAP_PROP_FPS)
+        self.video_time_each_frame = timedelta(seconds=1) / self.video_fps
+        self.video_process_time = timedelta(seconds=0)
 
         # configurando a equalização de histograma adaptativa
         self.clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
@@ -37,6 +43,9 @@ class VideoTracker(object):
         ok, frame = self.video.read()
         assert ok, "0x000"
         frame = cv2.resize(frame, self.resolution)
+
+        self.video_process_time += self.video_time_each_frame
+
         # convertendo para Lab para equalizar a luminancia do quadro
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2Lab)
         h, l, s = cv2.split(frame)
