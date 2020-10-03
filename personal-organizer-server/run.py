@@ -8,17 +8,15 @@ from datetime import datetime
 import base64
 
 if not os.path.exists("./files"):
-    os.makedirs("./files/videos")
-    os.makedirs("./files/audios")
-    os.makedirs("./files/outputs")
-    os.makedirs("./files/images")
+    os.makedirs("./files/")
 
+in_video_url = "files/{0}/{0}.mp4"
+out_video_url = "files/{0}/{0}.debug.mp4"
+audio_url = "files/{0}/{0}.wav"
+output_url = "files/{0}/{0}.dat"
+in_image_url = "files/{0}/{0}-in.jpg"
+out_image_url = "files/{0}/{0}-out.jpg"
 
-video_url = "files/videos/{}.mp4"
-audio_url = "files/audios/{}.wav"
-output_url = "files/outputs/{}.dat"
-in_image_url = "files/images/{}-in.jpg"
-out_image_url = "files/images/{}-out.jpg"
 server_parameters = {
     "host": "0",
     "port": 5000,
@@ -36,14 +34,24 @@ def main_process():
     """
 
     now = datetime.now().strftime("WF%Y%m%d%H%M%S")
+    os.makedirs("./files/{}".format(now))
 
     data = request.data
     write_file(data, now)
 
-    words = extract_audio(video_url.format(now), audio_url.format(now), output_url.format(now))
+    words = extract_audio(in_video_url.format(now), audio_url.format(now), output_url.format(now))
+
+    tracker_parameters = {
+        'debug': True,
+        'resolution': (1920, 1080),
+        'video_origin': in_video_url.format(now),
+        'video_destiny':out_video_url.format(now),
+        'words': words
+    }
 
     try:
-        VideoTracker(debug=True, resolution=(1920, 1080), video_origin=video_url.format(now), words=words).track()
+        vt = VideoTracker(**tracker_parameters)
+        vt.track(in_image_url.format(now), out_image_url.format(now))
     except Exception as e:
         if str(e) == "0x000":
             print("fim do video")
@@ -60,7 +68,7 @@ def write_file(data, now):
     Get base64 encoded video file, decode and write it on disk
     """
 
-    video_file = open(video_url.format(now), 'wb')
+    video_file = open(in_video_url.format(now), 'wb')
     video_file.write(base64.b64decode(data))
     video_file.close()
 

@@ -20,7 +20,6 @@ def speech_to_text_watson(audio_url, output_url):
 
     file = open(audio_url, "rb")
     speech_result = speech_to_text.recognize(file, content_type="audio/wav", model="pt-BR_NarrowbandModel", timestamps=True, speech_detector_sensitivity=0.9, end_of_phrase_silence_time=120.0)
-    print (speech_result)
     speech_result = speech_result.get_result()
     if "results" in speech_result and speech_result["results"]:
         result = speech_result["results"][0]
@@ -34,9 +33,6 @@ def speech_to_text_watson(audio_url, output_url):
                 log.write(u"word:{} start:{} end:{}\n".format(word[0], word[1], word[2]))
                 words_dict[word[0]] = {"start": timedelta(seconds=word[1]), "end": timedelta(seconds=word[2])}
             return words_dict
-
-
-    
 
 
 def speech_to_text_gcloud(audio_url, output_url):
