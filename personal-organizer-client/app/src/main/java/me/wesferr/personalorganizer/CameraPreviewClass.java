@@ -160,6 +160,8 @@ public class CameraPreviewClass {
         texture.setDefaultBufferSize(imageDimentions.getWidth(), imageDimentions.getHeight());
         Surface surface = new Surface(texture);
         captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+        captureRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_OFF);
+        captureRequestBuilder.set(CaptureRequest.LENS_FOCUS_DISTANCE, 5.0f);
         captureRequestBuilder.addTarget(surface);
         cameraDevice.createCaptureSession(Arrays.asList(surface), captureStateCallback, backgroundHandler);
 

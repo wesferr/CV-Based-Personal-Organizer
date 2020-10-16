@@ -128,6 +128,9 @@ public class CaptureVideoClass {
                 list.add(recorderSurface);
                 list.add(textureSurface);
                 final CaptureRequest.Builder captureRequest = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
+
+                captureRequest.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_OFF);
+                captureRequest.set(CaptureRequest.LENS_FOCUS_DISTANCE, 5.0f);
                 captureRequest.addTarget(recorderSurface);
                 captureRequest.addTarget(textureSurface);
                 mCaptureRequest = captureRequest.build();
