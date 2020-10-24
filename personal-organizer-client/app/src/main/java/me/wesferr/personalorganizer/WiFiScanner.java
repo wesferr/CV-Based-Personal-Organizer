@@ -12,6 +12,7 @@ import android.widget.Toast;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class WiFiScanner {
@@ -68,8 +69,14 @@ public class WiFiScanner {
     public void scan_itens(){
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
-        this.context.registerReceiver(wifiScanReceiver, intentFilter);
-        wifiManager.startScan();
+//        this.context.registerReceiver(wifiScanReceiver, intentFilter);
+//        wifiManager.startScan();
+        ArrayList<ScanResult> redes = (ArrayList<ScanResult>) wifiManager.getScanResults();
+        for(ScanResult rede: redes){
+            Log.d("redes", rede.SSID);
+            listActivity.addItems(rede);
+        }
+//        Toast.makeText(this.context, redes.get(0).SSID, Toast.LENGTH_SHORT).show();
         Toast.makeText(this.context, "Escaneando wifi", Toast.LENGTH_SHORT).show();
     }
 
