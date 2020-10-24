@@ -2,5 +2,11 @@ opencv-python
 dlib
 flask
 moviepy
-google-cloud-speech
+ibm_watson
 pydub
+scipy
+cython
+pymysql
+psutil
+sklearn
+matplotlib

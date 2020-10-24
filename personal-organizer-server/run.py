@@ -1,9 +1,15 @@
 import os
+import json
+from vt.vt import VocabularyTree
+from vt.vt import extract_descriptors
+from vt.vt import StrDescriptor
 from flask import Flask
 from flask import request
 from audio_processor import extract_audio
 from object_detector import VideoTracker
 from datetime import datetime
+
+import pymysql
 
 import base64
 
@@ -26,6 +32,37 @@ server_parameters = {
 
 app = Flask(__name__)
 
+database_parameters = {
+    "host": "127.0.0.1",
+    "user": "wesferr",
+    "password": "Password123@",
+    "database": "personal_organizer",
+}
+
+
+database_connector = pymysql.connect(**database_parameters)
+database_cursor = database_connector.cursor()
+
+tree = VocabularyTree(levels_to_use=4)
+
+if not database_cursor.execute("SHOW TABLES FROM `personal_organizer` LIKE 'images';"):
+    print("tabela de imagens não existe, criando")
+    database_cursor.execute("CREATE TABLE images ( id BIGINT PRIMARY KEY, path VARCHAR(255) NOT NULL UNIQUE, descriptors JSON );")
+else:
+    print("tabela de imagens existete, importando")
+    database_cursor.execute("SELECT id, descriptors FROM images")
+    imagens = database_cursor.fetchall()
+
+    descriptors = []
+    for img_id, img_des in imagens:
+        for descriptor in json.loads(img_des):
+            if descriptor:
+                temp_descriptor = StrDescriptor(descriptor)
+                temp_descriptor.IMAGE_ID = img_id
+                descriptors.append(temp_descriptor)
+
+    tree.start(descriptors, len(imagens))
+
 
 @app.route("/", methods=['post'])
 def main_process():
@@ -39,13 +76,19 @@ def main_process():
     data = request.data
     write_file(data, now)
 
-    words = extract_audio(in_video_url.format(now), audio_url.format(now), output_url.format(now))
+    args = [
+        in_video_url.format(now),
+        audio_url.format(now),
+        output_url.format(now)
+    ]
+
+    words = extract_audio(*args)
 
     tracker_parameters = {
         'debug': True,
         'resolution': (1920, 1080),
         'video_origin': in_video_url.format(now),
-        'video_destiny':out_video_url.format(now),
+        'video_destiny': out_video_url.format(now),
         'words': words
     }
 
@@ -60,7 +103,14 @@ def main_process():
         else:
             print(e)
 
-    return "OK"
+    descriptors = extract_descriptors([in_image_url.format(now)])
+    temp_descriptors = json.dumps(descriptors)
+    path = in_image_url.format(now)
+    identifier = now.replace("WF", "")
+
+    result = database_cursor.execute(f"INSERT INTO images VALUES ({identifier}, '{path}', '{temp_descriptors}')")
+    database_connector.commit()
+    return("OK")
 
 
 def write_file(data, now):

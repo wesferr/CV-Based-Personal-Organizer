@@ -1,3 +1,7 @@
 /env
 /files
 /__pycache__
+/vt/__pychache
+/vt/libs/__pycache__
+/vt/libs/build
+/vt/libs/cy_utils.c

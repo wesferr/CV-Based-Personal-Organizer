@@ -66,7 +66,6 @@ class VideoTracker(object):
         right = int(boundary_box.right()) if boundary_box.right() > 0 else 0
         return frame[top:bottom, left:right]
 
-
     def draw_frame(self, frame, boundary_box):
         top = int(boundary_box.top()) if boundary_box.top() > 0 else 0
         bottom = int(boundary_box.bottom())  if boundary_box.bottom() > 0 else 0
@@ -74,9 +73,7 @@ class VideoTracker(object):
         right = int(boundary_box.right()) if boundary_box.right() > 0 else 0
         cv2.rectangle(frame, (left, top), (right, bottom), (255, 255, 255), 3)
 
-
     def track(self, in_image, out_image):
-
 
         # carregando quadro, redimencionando
         while self.words['iniciar']['start'] > self.video_process_time:
@@ -97,10 +94,7 @@ class VideoTracker(object):
         base_keypoins, base_descriptors = self.orb.detectAndCompute(imagem_base, None)
         self.match_count = len(base_descriptors)
 
-
-
         while self.video.isOpened():
-
 
             # carregando quadro e redimencionando
             frame, height, width = self.get_frame()
@@ -129,7 +123,6 @@ class VideoTracker(object):
             if self.debug:
                 self.draw_frame(frame, boundary_box)
                 self.debug_video.write(frame)
-
 
         cv2.imwrite(out_image, frame)
         assert False, "0x004"

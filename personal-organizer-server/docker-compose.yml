@@ -1,0 +1,14 @@
+version: '3.2'
+services:
+  db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'personal_organizer'
+      MYSQL_USER: 'wesferr'
+      MYSQL_PASSWORD: 'Password123@'
+      MYSQL_ROOT_PASSWORD: 'Password123@'
+    ports:
+      - '3306:3306'
+    expose:
+      - '3306'
