@@ -15,6 +15,7 @@ import base64
 
 if not os.path.exists("./files"):
     os.makedirs("./files/")
+    os.makedirs("./files/uploaded")
 
 in_video_url = "files/{0}/{0}.mp4"
 out_video_url = "files/{0}/{0}.debug.mp4"
@@ -22,6 +23,8 @@ audio_url = "files/{0}/{0}.wav"
 output_url = "files/{0}/{0}.dat"
 in_image_url = "files/{0}/{0}-in.jpg"
 out_image_url = "files/{0}/{0}-out.jpg"
+
+search_image = "files/uploaded/{}.jpg"
 
 server_parameters = {
     "host": "0",
@@ -73,8 +76,9 @@ def main_process():
     now = datetime.now().strftime("WF%Y%m%d%H%M%S")
     os.makedirs("./files/{}".format(now))
 
-    data = request.data
-    write_file(data, now)
+    # data = request.data
+    file = request.files["image"]
+    file.save(in_video_url.format(now))
 
     args = [
         in_video_url.format(now),
@@ -103,22 +107,33 @@ def main_process():
         else:
             print(e)
 
-    descriptors = extract_descriptors([in_image_url.format(now)])
+    identifier = now.replace("WF", "")
+    descriptors = extract_descriptors([(identifier, in_image_url.format(now)), ])
     temp_descriptors = json.dumps(descriptors)
     path = in_image_url.format(now)
-    identifier = now.replace("WF", "")
 
     result = database_cursor.execute(f"INSERT INTO images VALUES ({identifier}, '{path}', '{temp_descriptors}')")
     database_connector.commit()
     return("OK")
 
+@app.route("/search", methods=['post'])
+def search_process():
+    now = datetime.now().strftime("WF%Y%m%d%H%M%S")
+    print(request.form)
+    print(request.files)
+    file = request.files['image']
+    file.save(search_image.format(now))
+    element = (now.replace("WF", ""), search_image.format(now))
+    tree.image_search([element, ])
+    return {}
 
-def write_file(data, now):
+
+def write_file(data, path):
     """
     Get base64 encoded video file, decode and write it on disk
     """
 
-    video_file = open(in_video_url.format(now), 'wb')
+    video_file = open(path, 'wb')
     video_file.write(base64.b64decode(data))
     video_file.close()
 
