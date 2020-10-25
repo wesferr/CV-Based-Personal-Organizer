@@ -140,10 +140,10 @@ class VocabularyTree:
                 query_histogram[node] = node.tf_idf
 
         # if node.level == self.levels_to_use:
-        for image_id in inverted_file[node].keys():   
+        for image_id in inverted_file[node].keys():
             if image_id not in matched_images.keys():
                 matched_images[image_id] = []
-    # else:        
+        # else:
         distances = []
         for number, centroid in enumerate(node.centroids):
             distance = c_hamming_distance(descriptors, centroid)
@@ -192,6 +192,7 @@ class VocabularyTree:
             score.append((s, _image_id))
 
         score.sort()
+        print(score[0][0])
         print(score[0][1])
 
     def image_insert(self, image_path):
@@ -218,7 +219,7 @@ def extract_descriptors(images_list):
     extractor = cv2.ORB_create(1000)
     descriptors_list = []
 
-    for number, image_path in enumerate(images_list):
+    for number, image_path in images_list:
 
         image = cv2.imread(image_path)
         keypoints, descriptors = extractor.detectAndCompute(image, None)
@@ -242,7 +243,7 @@ if __name__ == '__main__':
 
     images_list = make_image_list("./images")
     print(len(images_list))
-    descriptors = extract_descriptors(images_list)
+    descriptors = extract_descriptors(enumerate(images_list))
 
     tree = VocabularyTree(levels_to_use=4)
     tree.start(descriptors, len(images_list))
