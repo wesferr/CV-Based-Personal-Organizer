@@ -38,6 +38,16 @@ import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
 
+import okhttp3.Call;
+import okhttp3.FormBody;
+import okhttp3.Headers;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
 public class CaptureVideoClass {
 
     private static final SparseIntArray DEFAULT_ORIENTATIONS = new SparseIntArray();
@@ -227,22 +237,20 @@ public class CaptureVideoClass {
             public void run() {
                 try {
                     Log.d(TAG, "run: teste");
-                    String fileBytes = getBase64FromPath(filePath);
+                    File file = new File(filePath);
                     URL url = new URL("http://192.168.2.10:5000/");
-                    HttpURLConnection conn = null;
-                    conn = (HttpURLConnection) url.openConnection();
-                    conn.setRequestProperty("Content-Type", "video/mp4");
-                    conn.setRequestProperty("Content-Length", Integer.toString(fileBytes.length()));
-                    conn.setDoOutput(true); //fala que voce vai enviar algo
-                    conn.setDoInput(true);
-                    DataOutputStream wr = new DataOutputStream(conn.getOutputStream());
-                    wr.writeBytes(fileBytes);
-                    wr.flush();
-                    wr.close();
-                    conn.connect();
-                    String jsonDeResposta = new Scanner(conn.getInputStream()).next();
-                    Log.d(TAG, "run: " + jsonDeResposta);
-                    conn.disconnect();
+
+                    MultipartBody.Builder form = new MultipartBody.Builder().setType(MultipartBody.FORM);
+                    form.addFormDataPart("image","file.mp4", MultipartBody.create(file, MediaType.parse("video/mp4")));
+
+                    Request request = new Request.Builder()
+                            .header("Content-Type", "multipart/form-data")
+                            .url(url).post(form.build()).build();
+
+                    OkHttpClient client = new OkHttpClient();
+                    Call call = client.newCall(request);
+                    Response response = call.execute();
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
