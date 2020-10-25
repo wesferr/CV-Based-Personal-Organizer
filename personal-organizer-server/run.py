@@ -79,6 +79,12 @@ def main_process():
     # data = request.data
     file = request.files["image"]
     file.save(in_video_url.format(now))
+    extra_data = request.form.get("extra_data")
+    extra_data = json.loads(extra_data)
+    for network in extra_data.get("wireless").replace("[", "").replace("]", "").split(", "):
+        network = json.loads(network.replace(';', ','))
+
+    print(extra_data.get("bussola"))
 
     args = [
         in_video_url.format(now),

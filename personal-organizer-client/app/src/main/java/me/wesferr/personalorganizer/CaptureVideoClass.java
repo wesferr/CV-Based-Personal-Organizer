@@ -4,6 +4,10 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.SurfaceTexture;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -12,6 +16,8 @@ import android.hardware.camera2.CameraDevice.StateCallback;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CaptureRequest;
 import android.media.MediaRecorder;
+import android.net.wifi.ScanResult;
+import android.net.wifi.WifiManager;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -25,6 +31,9 @@ import android.widget.Toast;
 
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.DataOutputStream;
 import java.io.File;
@@ -47,6 +56,8 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+
+import static android.content.Context.SENSOR_SERVICE;
 
 public class CaptureVideoClass {
 
@@ -86,6 +97,16 @@ public class CaptureVideoClass {
     private CameraCaptureSession cameraCaptureSession;
     private Integer mSensorOrientation;
     private String filePath;
+
+    float azimuth = 0;
+    SensorManager sensorManager = null;
+    Sensor accelerometer, magnetometer;
+
+    float[] accelerometerVector = new float[3];
+    float[] magnetometerVector = new float[3];
+    float[] rotation = new float[9];
+    float[] inclination = new float[9];
+    private WifiManager wifiManager;
 
     private String getVideoFilePath() {
         File pasta = new File(Environment.getExternalStorageDirectory(), "/PersonalOrganizer");
@@ -194,6 +215,13 @@ public class CaptureVideoClass {
     @SuppressLint("MissingPermission")
     void startRecordingVideo() {
 
+        sensorManager = (SensorManager) context.getSystemService(SENSOR_SERVICE);
+        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        magnetometer = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+
+        sensorManager.registerListener(mSensorEventListener, accelerometer, SensorManager.SENSOR_DELAY_GAME);
+        sensorManager.registerListener(mSensorEventListener, magnetometer, SensorManager.SENSOR_DELAY_GAME);
+
         this.startBackgroundThread();
         Activity activity = (Activity) context;
         mCameraManager = (CameraManager)activity.getSystemService(Context.CAMERA_SERVICE);
@@ -236,12 +264,27 @@ public class CaptureVideoClass {
             @Override
             public void run() {
                 try {
+
+                    wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+                    ArrayList<ScanResult> redes = (ArrayList<ScanResult>) wifiManager.getScanResults();
+
+                    ArrayList<String> string_redes = new ArrayList<String>();
+                    for(ScanResult rede: redes){
+                        string_redes.add("{\"SSID\": \"" + rede.SSID + "\"; \"BSSID\": \"" + rede.BSSID + "\"; \"LEVEL\": " + rede.level + "}");
+                    }
+
+                    JSONObject extra_data = new JSONObject();
+                    extra_data.put("wireless", string_redes);
+                    extra_data.put("bussola", azimuth);
+
+
                     Log.d(TAG, "run: teste");
                     File file = new File(filePath);
                     URL url = new URL("http://192.168.2.10:5000/");
 
                     MultipartBody.Builder form = new MultipartBody.Builder().setType(MultipartBody.FORM);
                     form.addFormDataPart("image","file.mp4", MultipartBody.create(file, MediaType.parse("video/mp4")));
+                    form.addFormDataPart("extra_data", extra_data.toString());
 
                     Request request = new Request.Builder()
                             .header("Content-Type", "multipart/form-data")
@@ -251,7 +294,7 @@ public class CaptureVideoClass {
                     Call call = client.newCall(request);
                     Response response = call.execute();
 
-                } catch (IOException e) {
+                } catch (IOException | JSONException e) {
                     e.printStackTrace();
                 }
             }
@@ -290,4 +333,47 @@ public class CaptureVideoClass {
             e.printStackTrace();
         }
     }
+
+    private SensorEventListener mSensorEventListener = new SensorEventListener() {
+
+        float[] orientation = new float[3];
+        float[] rMat = new float[9];
+
+        public void onAccuracyChanged(Sensor sensor, int accuracy) {
+        }
+
+        @Override
+        public void onSensorChanged(SensorEvent event) {
+            float alpha = 0.97f;
+            synchronized (this) {
+                if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+
+                    accelerometerVector[0] = alpha * accelerometerVector[0] + (1 - alpha) * event.values[0];
+                    accelerometerVector[1] = alpha * accelerometerVector[1] + (1 - alpha) * event.values[1];
+                    accelerometerVector[2] = alpha * accelerometerVector[2] + (1 - alpha) * event.values[2];
+
+                }
+
+                if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
+
+                    magnetometerVector[0] = alpha * magnetometerVector[0] + (1 - alpha) * event.values[0];
+                    magnetometerVector[1] = alpha * magnetometerVector[1] + (1 - alpha) * event.values[1];
+                    magnetometerVector[2] = alpha * magnetometerVector[2] + (1 - alpha) * event.values[2];
+
+                }
+            }
+
+            boolean success = SensorManager.getRotationMatrix(rotation, inclination, accelerometerVector, magnetometerVector);
+
+            if(success) {
+
+                float orientation[] = new float[3];
+                SensorManager.getOrientation(rotation, orientation);
+                azimuth = (float) Math.toDegrees(orientation[0]); // orientation
+                azimuth = (azimuth + 360) % 360;
+
+            }
+        }
+
+    };
 }
