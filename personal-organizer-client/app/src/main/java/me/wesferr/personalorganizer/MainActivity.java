@@ -2,6 +2,7 @@ package me.wesferr.personalorganizer;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
@@ -16,16 +17,30 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import org.jetbrains.annotations.NotNull;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringTokenizer;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 
@@ -78,6 +93,35 @@ public class MainActivity extends AppCompatActivity {
     Button capturebutton;
     Size[] output_sizes;
     Size size;
+    String words;
+
+
+    Thread sendSearchThread = new Thread(new Runnable() {
+        @Override
+        public void run() {
+            MultipartBody.Builder form = new MultipartBody.Builder().setType(MultipartBody.FORM);
+            form.addFormDataPart("image","file.jpg", MultipartBody.create(photoClass.file, MediaType.parse("image/jpg")));
+            form.addFormDataPart("extra_data", words);
+
+            Request request = new Request.Builder()
+                    .header("Content-Type", "multipart/form-data")
+                    .url("http://192.168.2.10:5000/search").post(form.build()).build();
+
+            OkHttpClient client = new OkHttpClient();
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                    e.printStackTrace();
+                }
+
+                @Override
+                public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                    Log.i(TAG, "onResponse: done");
+                }
+            });
+
+        }
+    });
 
 
 
@@ -182,6 +226,28 @@ public class MainActivity extends AppCompatActivity {
 
     protected void permissionsSuccess() {
 
+        final AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        alert.setTitle("Buscar");
+        alert.setMessage("Digite as palavras separadas por ';'");
+
+        final EditText input = new EditText(this);
+        alert.setView(input);
+
+        alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                words = input.getText().toString();
+                sendSearchThread.run();
+
+            }
+        });
+
+        alert.setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                return;
+            }
+        });
+
         try {
             setResolutionChoices();
         } catch (CameraAccessException e) {
@@ -200,6 +266,7 @@ public class MainActivity extends AppCompatActivity {
         buttonPhoto.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                alert.show();
                 photoClass.takePicture(previewClass, size);
             }
         });

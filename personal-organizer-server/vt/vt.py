@@ -159,6 +159,9 @@ class VocabularyTree:
         global query_histogram
         global matched_images
 
+        matched_images = {}
+        query_histogram = {}
+
         descriptors = extract_descriptors(images_list)
         for descriptor in descriptors:
             self.explore(descriptors=descriptor, node=self.root)

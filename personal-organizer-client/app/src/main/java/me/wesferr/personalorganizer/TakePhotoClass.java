@@ -27,21 +27,30 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import okhttp3.Call;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+
 public class TakePhotoClass {
 
     final String TAG = "CAMERALOG";
     Context context;
-    private Handler backgroundHandler;
-    private HandlerThread backgroundThread;
+    Handler backgroundHandler;
     CaptureRequest.Builder captureBuilder;
     CameraPreviewClass cameraPreview;
     File file;
+    String words;
 
     private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
 

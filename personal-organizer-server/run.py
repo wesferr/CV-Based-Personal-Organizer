@@ -64,7 +64,8 @@ else:
                 temp_descriptor.IMAGE_ID = img_id
                 descriptors.append(temp_descriptor)
 
-    tree.start(descriptors, len(imagens))
+    if len(imagens) > 0:
+        tree.start(descriptors, len(imagens))
 
 
 @app.route("/", methods=['post'])
