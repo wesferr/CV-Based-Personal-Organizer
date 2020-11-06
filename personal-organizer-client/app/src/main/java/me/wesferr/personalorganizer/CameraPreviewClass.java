@@ -17,7 +17,6 @@ import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
 import android.view.TextureView;
@@ -26,11 +25,10 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.util.Arrays;
+import java.util.Collections;
 
 public class CameraPreviewClass {
 
-    Size[] sizes;
     private Size imageDimentions;
     private TextureView previewView;
     private Context context;
@@ -163,7 +161,7 @@ public class CameraPreviewClass {
         captureRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_OFF);
         captureRequestBuilder.set(CaptureRequest.LENS_FOCUS_DISTANCE, 5.0f);
         captureRequestBuilder.addTarget(surface);
-        cameraDevice.createCaptureSession(Arrays.asList(surface), captureStateCallback, backgroundHandler);
+        cameraDevice.createCaptureSession(Collections.singletonList(surface), captureStateCallback, backgroundHandler);
 
     }
 

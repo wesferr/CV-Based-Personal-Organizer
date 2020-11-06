@@ -1,9 +1,9 @@
 package me.wesferr.personalorganizer;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
@@ -28,11 +28,16 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import org.jetbrains.annotations.NotNull;
+import org.json.JSONException;
+import org.json.JSONObject;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.StringTokenizer;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -70,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
     final int INTERNET_REQUEST_CODE = 0x80;
     final int ACCESS_NETWORK_STATE_REQUEST_CODE = 0x100;
 
-    // TODO: Request permisison to microphone
+    // TODO: Request permission to microphone
 
     final int permissions_request_codes =
         CAMERA_REQUEST_CODE +
@@ -94,20 +99,60 @@ public class MainActivity extends AppCompatActivity {
     Size[] output_sizes;
     Size size;
     String words;
+    SensorsScanner sensorsScanner;
 
+    public class RequestSender implements Runnable{
 
-    Thread sendSearchThread = new Thread(new Runnable() {
+        Context context;
+        File file;
+        String mediatype;
+        String endpoint;
+
+        RequestSender(Context context, File file, String mediatype, String endpoint){
+            this.context = context;
+            this.file = file;
+            this.mediatype = mediatype;
+            this.endpoint = endpoint;
+        }
+
         @Override
         public void run() {
+
+
+            JSONObject extra_data = new JSONObject();
+
+            while (!sensorsScanner.azimuth_ready()){
+                Log.i(TAG, "run: waiting");
+            }
+
+            try {
+                extra_data.put("wireless", sensorsScanner.get_wifi_list());
+                extra_data.put("bussola", sensorsScanner.get_azimuth());
+                extra_data.put("words", words);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            URL url = null;
+            try {
+                url = new URL("http://192.168.2.10:5000" + endpoint);
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            }
+            assert url != null;
+
             MultipartBody.Builder form = new MultipartBody.Builder().setType(MultipartBody.FORM);
-            form.addFormDataPart("image","file.jpg", MultipartBody.create(photoClass.file, MediaType.parse("image/jpg")));
-            form.addFormDataPart("extra_data", words);
+            form.addFormDataPart("file", file.getName(), MultipartBody.create(file, MediaType.parse(mediatype)));
+            form.addFormDataPart("extra_data", extra_data.toString());
 
             Request request = new Request.Builder()
                     .header("Content-Type", "multipart/form-data")
-                    .url("http://192.168.2.10:5000/search").post(form.build()).build();
+                    .url(url).post(form.build()).build();
 
             OkHttpClient client = new OkHttpClient();
+
+//            final Toast ok_toast = Toast.makeText(context, "Requisição Funcionou", Toast.LENGTH_LONG);
+
             client.newCall(request).enqueue(new Callback() {
                 @Override
                 public void onFailure(@NotNull Call call, @NotNull IOException e) {
@@ -115,15 +160,12 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 @Override
-                public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                    Log.i(TAG, "onResponse: done");
+                public void onResponse(@NotNull Call call, @NotNull Response response) {
+//                    ok_toast.show();
                 }
             });
-
         }
-    });
-
-
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -188,13 +230,12 @@ public class MainActivity extends AppCompatActivity {
         String cameraId = cameraManager.getCameraIdList()[0];
         CameraCharacteristics characteristics = cameraManager.getCameraCharacteristics(cameraId);
         StreamConfigurationMap configs = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+        assert configs != null;
         output_sizes = configs.getOutputSizes(MediaCodec.class);
 
         final Spinner spinner = findViewById(R.id.combobox);
-        final List<Size> sizes = new ArrayList<Size>();
-        for(Size size:output_sizes) {
-            sizes.add(size);
-        }
+        final List<Size> sizes = new ArrayList<>();
+        Collections.addAll(sizes, output_sizes);
         ArrayAdapter<Size> dataAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, sizes );
         dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(dataAdapter);
@@ -205,8 +246,6 @@ public class MainActivity extends AppCompatActivity {
                 spinner.setSelection(i);
             }
         }
-
-
 
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -224,8 +263,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    protected void permissionsSuccess() {
-
+    void createAlert(){
         final AlertDialog.Builder alert = new AlertDialog.Builder(this);
         alert.setTitle("Buscar");
         alert.setMessage("Digite as palavras separadas por ';'");
@@ -236,17 +274,14 @@ public class MainActivity extends AppCompatActivity {
         alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
                 words = input.getText().toString();
-                sendSearchThread.run();
-
+                new Thread(new RequestSender(getApplicationContext(), photoClass.file, "image/jpg", "/search")).start();
             }
         });
 
-        alert.setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                return;
-            }
-        });
+        alert.show();
+    }
+
+    protected void permissionsSuccess() {
 
         try {
             setResolutionChoices();
@@ -261,17 +296,19 @@ public class MainActivity extends AppCompatActivity {
 
         photoClass = new TakePhotoClass();
         photoClass.setupCallback(this);
+        sensorsScanner = new SensorsScanner(getApplicationContext());
 
         Button buttonPhoto = findViewById(R.id.take_photo);
         buttonPhoto.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                alert.show();
+                createAlert();
                 photoClass.takePicture(previewClass, size);
             }
         });
 
         capturebutton.setOnClickListener(new View.OnClickListener() {
+            @SuppressLint("SetTextI18n")
             @Override
             public void onClick(View v) {
                 if(recording == 0){
@@ -281,6 +318,8 @@ public class MainActivity extends AppCompatActivity {
                     recording = 1;
                 } else {
                     videoClass.stopRecordingVideo();
+                    words = "";
+                    new Thread(new RequestSender(getApplicationContext(), videoClass.file, "image/mp4", "")).start();
                     capturebutton.setText("Gravar");
                     previewClass.resumePreview();
                     recording = 0;
@@ -308,6 +347,9 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
         if (previewClass!=null){
             previewClass.pausePreview();
+        }
+        if(recording == 1){
+            videoClass.stopRecordingVideo();
         }
         super.onPause();
     }
