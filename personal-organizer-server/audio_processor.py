@@ -5,7 +5,6 @@ import moviepy.editor as video_editor
 from pydub import AudioSegment
 
 
-
 def speech_to_text_watson(audio_url, output_url):
     from ibm_watson import SpeechToTextV1
     from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
@@ -15,7 +14,7 @@ def speech_to_text_watson(audio_url, output_url):
     words_dict = {}
 
     authenticator = IAMAuthenticator("4VsBtXi7dQ2QPjWcUV-_HV0_0Q1otdS2JwUcfNm43q4q")
-    speech_to_text = SpeechToTextV1( authenticator=authenticator )
+    speech_to_text = SpeechToTextV1(authenticator=authenticator)
     speech_to_text.set_service_url("https://api.us-south.speech-to-text.watson.cloud.ibm.com/instances/665ee44d-b432-4f48-addf-35a750a5ee16")
 
     file = open(audio_url, "rb")
@@ -84,6 +83,7 @@ def extract_audio(video_url, audio_url, output_url):
     words = speech_to_text_watson(audio_url, output_url)
     os.remove(audio_url)
     return words
+
 
 if __name__ == "__main__":
     print(speech_to_text_watson("./files/audios/WF20200927204253.wav", "./"))
