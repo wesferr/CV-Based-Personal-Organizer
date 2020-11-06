@@ -1,6 +1,7 @@
 import numpy as np
 from .utils import majority, c_hamming_distance
 
+
 class Kmajority():
 
     def __init__(self, n_clusters):
@@ -11,7 +12,6 @@ class Kmajority():
         n_bits = len(descritores[0])
         centroids = self.init_centroids(descritores)
         clusters = {}
-        
 
         while True:
             # Guarda cópia dos centroids para comparação
@@ -26,7 +26,7 @@ class Kmajority():
 
                 values = []
                 for centroid in centroids:
-                    values.append( (c_hamming_distance(b_string, centroid), centroid) )
+                    values.append((c_hamming_distance(b_string, centroid), centroid))
                 choice = min(values)[1]
 
                 # Adiciona descritor ao seu cluster
@@ -39,12 +39,13 @@ class Kmajority():
             centroids = []
             for key, value in clusters.items():
                 centroids.append(majority(data=value, data_len=len(value), n_bits=n_bits))
-    
+
             # Testa se os centroids sofreram modificações
             if old_clusters == clusters:
                 break
 
-        centroids = None; old_clusters = None
+        centroids = None
+        old_clusters = None
         return tuple(clusters.keys()), tuple(clusters.values())
 
     def init_centroids(self, descritores):

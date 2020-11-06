@@ -13,6 +13,7 @@ matched_images = {}
 
 class StrDescriptor(str):
     __slots__ = ['IMAGE_ID']
+
     def __init__(self, value):
         self = str.__new__(StrDescriptor, value)
 
@@ -195,10 +196,8 @@ class VocabularyTree:
             score.append((s, _image_id))
 
         score.sort()
-        print(score[0][0])
-        print(score[0][1])
 
-    def image_insert(self, image_path):
+    def image_insert(self, image_identifier, image_path):
 
         global query_histogram
         global matched_images
@@ -206,7 +205,9 @@ class VocabularyTree:
         query_histogram = {}
         matched_images = {}
 
-        temp_descriptors = extract_descriptors([image_path])
+        temp_descriptors = extract_descriptors([(image_identifier, image_path)])
+        if self.root is None:
+            self.start(temp_descriptors, 1)
         for descriptor in temp_descriptors:
             self.explore(descriptor, node=self.root)
 
@@ -214,6 +215,8 @@ class VocabularyTree:
         first_node = query_histogram[0][0]
         first_node.update_node(temp_descriptors, self.number_of_images, self.levels_to_use)
         self.number_of_images += 1
+
+        return temp_descriptors
 
 
 def extract_descriptors(images_list):

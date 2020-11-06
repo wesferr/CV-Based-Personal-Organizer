@@ -20,7 +20,7 @@ class VideoTracker(object):
         self.video_process_time = timedelta(seconds=0)
 
         # configurando a equalização de histograma adaptativa
-        self.clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+        self.clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
 
         # configurarndo dicionario de palavras
         self.words = words
@@ -52,8 +52,8 @@ class VideoTracker(object):
         # convertendo para Lab para equalizar a luminancia do quadro
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2Lab)
         h, l, s = cv2.split(frame)
-        l = self.clahe.apply(l)
-        frame = cv2.merge((h, l, s))
+        luminosity = self.clahe.apply(l)
+        frame = cv2.merge((h, luminosity, s))
         frame = cv2.cvtColor(frame, cv2.COLOR_Lab2RGB)
 
         height, width, color_size = frame.shape
@@ -61,14 +61,14 @@ class VideoTracker(object):
 
     def crop_frame(self, frame, boundary_box):
         top = int(boundary_box.top()) if boundary_box.top() > 0 else 0
-        bottom = int(boundary_box.bottom())  if boundary_box.bottom() > 0 else 0
+        bottom = int(boundary_box.bottom()) if boundary_box.bottom() > 0 else 0
         left = int(boundary_box.left()) if boundary_box.left() > 0 else 0
         right = int(boundary_box.right()) if boundary_box.right() > 0 else 0
         return frame[top:bottom, left:right]
 
     def draw_frame(self, frame, boundary_box):
         top = int(boundary_box.top()) if boundary_box.top() > 0 else 0
-        bottom = int(boundary_box.bottom())  if boundary_box.bottom() > 0 else 0
+        bottom = int(boundary_box.bottom()) if boundary_box.bottom() > 0 else 0
         left = int(boundary_box.left()) if boundary_box.left() > 0 else 0
         right = int(boundary_box.right()) if boundary_box.right() > 0 else 0
         cv2.rectangle(frame, (left, top), (right, bottom), (255, 255, 255), 3)
@@ -76,14 +76,17 @@ class VideoTracker(object):
     def track(self, in_image, out_image):
 
         # carregando quadro, redimencionando
-        while self.words['iniciar']['start'] > self.video_process_time:
+        if not self.words.get('capturar', None):
+            assert False, "0x002"
+
+        while self.words['capturar']['start'] > self.video_process_time:
             frame, height, width = self.get_frame()
 
         while cv2.Laplacian(frame, cv2.CV_64F).var() < 20.0:
             frame, height, width = self.get_frame()
 
         cv2.imwrite(in_image, frame)
-        # carregando a fronteira de rastreamento        
+        # carregando a fronteira de rastreamento
         boundary_box = rectangle(width // 3, height // 3, 2 * (width // 3), 2 * (height // 3))
 
         # iniciando o rastreamento
@@ -106,15 +109,15 @@ class VideoTracker(object):
                 matches = self.matcher.match(base_descriptors, teste_descriptors)
             else:
                 cv2.imwrite(out_image, frame)
-                assert False, "0x002"
+                assert False, "0x003"
 
             # # saindo quando atingir a percentagem minima de descritores compativeis
             # if self.debug:
             #     print(int(self.match_count * self.exit_per), len(matches), cv2.Laplacian(frame, cv2.CV_64F).var())
-                
+
             if int(self.match_count * self.exit_per) >= len(matches):
                 cv2.imwrite(out_image, frame)
-                assert False, "0x003"
+                assert False, "0x004"
 
             # atualizando estado do rastreador e boundary box
             self.tracker.update(frame)
@@ -125,7 +128,7 @@ class VideoTracker(object):
                 self.debug_video.write(frame)
 
         cv2.imwrite(out_image, frame)
-        assert False, "0x004"
+        assert False, "0x005"
 
 
 if __name__ == '__main__':

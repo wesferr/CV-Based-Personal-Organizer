@@ -3,7 +3,7 @@ import json
 from vt.vt import VocabularyTree
 from vt.vt import extract_descriptors
 from vt.vt import StrDescriptor
-from flask import Flask
+from flask import Flask, Response
 from flask import request
 from audio_processor import extract_audio
 from object_detector import VideoTracker
@@ -78,14 +78,12 @@ def main_process():
     os.makedirs("./files/{}".format(now))
 
     # data = request.data
-    file = request.files["image"]
+    file = request.files["file"]
     file.save(in_video_url.format(now))
     extra_data = request.form.get("extra_data")
     extra_data = json.loads(extra_data)
     for network in extra_data.get("wireless").replace("[", "").replace("]", "").split(", "):
         network = json.loads(network.replace(';', ','))
-
-    print(extra_data.get("bussola"))
 
     args = [
         in_video_url.format(now),
@@ -104,31 +102,29 @@ def main_process():
     }
 
     try:
-        vt = VideoTracker(**tracker_parameters)
-        vt.track(in_image_url.format(now), out_image_url.format(now))
+        video_tracker = VideoTracker(**tracker_parameters)
+        video_tracker.track(in_image_url.format(now), out_image_url.format(now))
     except Exception as e:
-        if str(e) == "0x000":
-            print("fim do video")
-        elif str(e) == "0x001":
-            print("problema com o carregamento do video")
-        else:
-            print(e)
+        video_tracker.debug_video.release()
+        if e in ["0x000", "0x002"]:
+            return Response(e, 400)
 
     identifier = now.replace("WF", "")
-    descriptors = extract_descriptors([(identifier, in_image_url.format(now)), ])
-    temp_descriptors = json.dumps(descriptors)
     path = in_image_url.format(now)
+    temp_descriptors = tree.image_insert(identifier, path)
 
     result = database_cursor.execute(f"INSERT INTO images VALUES ({identifier}, '{path}', '{temp_descriptors}')")
     database_connector.commit()
-    return("OK")
+
+    return Response("ok", 200)
+
 
 @app.route("/search", methods=['post'])
 def search_process():
     now = datetime.now().strftime("WF%Y%m%d%H%M%S")
     print(request.form)
     print(request.files)
-    file = request.files['image']
+    file = request.files['file']
     file.save(search_image.format(now))
     element = (now.replace("WF", ""), search_image.format(now))
     tree.image_search([element, ])
