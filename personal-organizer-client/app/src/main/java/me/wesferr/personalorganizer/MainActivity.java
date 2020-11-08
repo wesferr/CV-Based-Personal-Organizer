@@ -177,11 +177,20 @@ public class MainActivity extends AppCompatActivity {
 
                 @Override
                 public void onResponse(@NotNull Call call, @NotNull Response response) {
-                    body = response.body();
-                    assert body != null;
-                    if(body.contentType().toString().equals("image/jpeg")){
 
-                        getResponseImage();
+                    if(!response.isSuccessful()){
+                        Toast.makeText(context, "Desculpe, problema com o envio", Toast.LENGTH_LONG).show();
+                    } else {
+
+                        body = response.body();
+                        assert body != null;
+                        if(body.contentType().toString().equals("image/jpeg")){
+                            getResponseImage();
+                        }
+
+                        if(body.contentType().toString().equals("application/json")){
+
+                        }
 
                     }
 
