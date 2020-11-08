@@ -15,6 +15,7 @@ import android.media.MediaRecorder;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.Surface;
@@ -34,23 +35,12 @@ import java.util.List;
 public class CaptureVideoClass {
 
     private static final SparseIntArray DEFAULT_ORIENTATIONS = new SparseIntArray();
-    private static final SparseIntArray INVERSE_ORIENTATIONS = new SparseIntArray();
-
-    private static final int SENSOR_ORIENTATION_DEFAULT_DEGREES = 90;
-    private static final int SENSOR_ORIENTATION_INVERSE_DEGREES = 270;
 
     static {
         DEFAULT_ORIENTATIONS.append(Surface.ROTATION_0, 90);
         DEFAULT_ORIENTATIONS.append(Surface.ROTATION_90, 0);
-        DEFAULT_ORIENTATIONS.append(Surface.ROTATION_180, 270);
-        DEFAULT_ORIENTATIONS.append(Surface.ROTATION_270, 180);
-    }
-
-    static {
-        INVERSE_ORIENTATIONS.append(Surface.ROTATION_0, 270);
-        INVERSE_ORIENTATIONS.append(Surface.ROTATION_90, 180);
-        INVERSE_ORIENTATIONS.append(Surface.ROTATION_180, 90);
-        INVERSE_ORIENTATIONS.append(Surface.ROTATION_270, 0);
+        DEFAULT_ORIENTATIONS.append(Surface.ROTATION_180, 90);
+        DEFAULT_ORIENTATIONS.append(Surface.ROTATION_270, 0);
     }
 
     private final TextureView previewView;
@@ -64,7 +54,6 @@ public class CaptureVideoClass {
     private Handler backgroundHandler;
     private HandlerThread backgroundThread;
     private CameraCaptureSession cameraCaptureSession;
-    private Integer mSensorOrientation;
     private String filePath;
     File file;
     SensorsScanner sensorsScanner;
@@ -107,17 +96,9 @@ public class CaptureVideoClass {
             mMediaRecorder.setVideoEncodingBitRate(10000000);
             mMediaRecorder.setVideoFrameRate(30);
             mMediaRecorder.setVideoSize(size.getWidth(), size.getHeight());
-            mMediaRecorder.setOrientationHint(SENSOR_ORIENTATION_DEFAULT_DEGREES);
 
             int rotation = ((Activity)context).getWindowManager().getDefaultDisplay().getRotation();
-            switch (mSensorOrientation) {
-                case SENSOR_ORIENTATION_DEFAULT_DEGREES:
-                    mMediaRecorder.setOrientationHint(DEFAULT_ORIENTATIONS.get(rotation));
-                    break;
-                case SENSOR_ORIENTATION_INVERSE_DEGREES:
-                    mMediaRecorder.setOrientationHint(INVERSE_ORIENTATIONS.get(rotation));
-                    break;
-            }
+            mMediaRecorder.setOrientationHint(DEFAULT_ORIENTATIONS.get(rotation));
 
             try {
 
@@ -192,7 +173,6 @@ public class CaptureVideoClass {
         try {
             String[] cameras = mCameraManager.getCameraIdList();
             CameraCharacteristics characteristics = mCameraManager.getCameraCharacteristics(cameras[0]);
-            mSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
             mCameraManager.openCamera(cameras[0], cameraStateCallback, backgroundHandler);
 
         } catch (CameraAccessException e) {

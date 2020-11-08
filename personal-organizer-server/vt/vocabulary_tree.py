@@ -108,7 +108,7 @@ class VocabularyTree:
         self.start_level = 0
         self.number_of_images = number_of_images
         print("buildando a arvore")
-        self.root = Node(descriptors, number_of_images, self.levels_to_use)
+        self.root = Node(descriptors, self.number_of_images, self.levels_to_use)
 
     def write_tree(self, file_optput):
 
@@ -196,6 +196,7 @@ class VocabularyTree:
             score.append((s, _image_id))
 
         score.sort()
+        return score[0]
 
     def image_insert(self, image_identifier, image_path):
 
@@ -211,10 +212,10 @@ class VocabularyTree:
         for descriptor in temp_descriptors:
             self.explore(descriptor, node=self.root)
 
+        self.number_of_images += 1
         query_histogram = sorted(query_histogram.items(), key=lambda x: x[1], reverse=True)
         first_node = query_histogram[0][0]
         first_node.update_node(temp_descriptors, self.number_of_images, self.levels_to_use)
-        self.number_of_images += 1
 
         return temp_descriptors
 

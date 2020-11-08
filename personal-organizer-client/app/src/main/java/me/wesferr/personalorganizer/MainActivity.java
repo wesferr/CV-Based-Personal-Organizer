@@ -4,20 +4,29 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.MediaCodec;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.util.Log;
 import android.util.Size;
+import android.view.LayoutInflater;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -32,8 +41,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -46,6 +61,7 @@ import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 
@@ -107,6 +123,7 @@ public class MainActivity extends AppCompatActivity {
         File file;
         String mediatype;
         String endpoint;
+        ResponseBody body = null;
 
         RequestSender(Context context, File file, String mediatype, String endpoint){
             this.context = context;
@@ -151,7 +168,6 @@ public class MainActivity extends AppCompatActivity {
 
             OkHttpClient client = new OkHttpClient();
 
-//            final Toast ok_toast = Toast.makeText(context, "Requisição Funcionou", Toast.LENGTH_LONG);
 
             client.newCall(request).enqueue(new Callback() {
                 @Override
@@ -161,8 +177,49 @@ public class MainActivity extends AppCompatActivity {
 
                 @Override
                 public void onResponse(@NotNull Call call, @NotNull Response response) {
-//                    ok_toast.show();
+                    body = response.body();
+                    assert body != null;
+                    if(body.contentType().toString().equals("image/jpeg")){
+
+                        getResponseImage();
+
+                    }
+
+
                 }
+
+                void getResponseImage(){
+                    InputStream bytes = body.byteStream();
+                    OutputStream image = null;
+                    try {
+                        image = new FileOutputStream(new File(Environment.getExternalStorageDirectory() + "/PersonalOrganizer/present.jpg"));
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                    try {
+                        byte[] data = new byte[1024];
+
+                        long total = 0;
+                        int count;
+                        while ((count = bytes.read(data)) != -1) {
+                            total += count;
+                            image.write(data, 0, count);
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    try {
+                        image.flush();
+                        image.close();
+                        bytes.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    Intent intent = new Intent(context, FeedbackActivity.class);
+                    startActivity(intent);
+                }
+
             });
         }
     }

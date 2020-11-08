@@ -1,10 +1,11 @@
 import os
 import json
-from vt.vt import VocabularyTree
-from vt.vt import extract_descriptors
-from vt.vt import StrDescriptor
+from vt.vocabulary_tree import VocabularyTree
+from vt.vocabulary_tree import extract_descriptors
+from vt.vocabulary_tree import StrDescriptor
 from flask import Flask, Response
 from flask import request
+from flask import send_file
 from audio_processor import extract_audio
 from object_detector import VideoTracker
 from datetime import datetime
@@ -111,7 +112,7 @@ def main_process():
 
     identifier = now.replace("WF", "")
     path = in_image_url.format(now)
-    temp_descriptors = tree.image_insert(identifier, path)
+    temp_descriptors = json.dumps(tree.image_insert(identifier, path))
 
     result = database_cursor.execute(f"INSERT INTO images VALUES ({identifier}, '{path}', '{temp_descriptors}')")
     database_connector.commit()
@@ -122,13 +123,17 @@ def main_process():
 @app.route("/search", methods=['post'])
 def search_process():
     now = datetime.now().strftime("WF%Y%m%d%H%M%S")
-    print(request.form)
-    print(request.files)
     file = request.files['file']
     file.save(search_image.format(now))
     element = (now.replace("WF", ""), search_image.format(now))
-    tree.image_search([element, ])
-    return {}
+    best_score = tree.image_search([element, ])
+
+    if not best_score or best_score[0] > 0.5:
+        return Response("Nenhuma imagem encontrada", 404)
+    else:
+        database_cursor.execute(f"SELECT path from images where id={best_score[1]}")
+        file = database_cursor.fetchone()[0]
+        return send_file(file)
 
 
 def write_file(data, path):
