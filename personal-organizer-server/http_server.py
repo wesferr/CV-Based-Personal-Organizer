@@ -68,14 +68,17 @@ else:
     if len(imagens) > 0:
         tree.start(descriptors, len(imagens))
 
+if not database_cursor.execute("SHOW TABLES FROM `personal_organizer` LIKE 'words';"):
+    database_cursor.execute("CREATE TABLE words ( id INT NOT NULL AUTO_INCREMENT, id_image BIGINT(20), word VARCHAR(45), word_start DATETIME(6), word_end DATETIME(6), PRIMARY KEY (id), FOREIGN KEY (id_image) REFERENCES images(id) );")
+
 
 @app.route("/", methods=['post'])
 def main_process():
     """
     Listener that recieves the phone requests
     """
-
-    now = datetime.now().strftime("WF%Y%m%d%H%M%S")
+    dt_now = datetime.now()
+    now = dt_now.strftime("WF%Y%m%d%H%M%S")
     os.makedirs("./files/{}".format(now))
 
     # data = request.data
@@ -117,23 +120,42 @@ def main_process():
     result = database_cursor.execute(f"INSERT INTO images VALUES ({identifier}, '{path}', '{temp_descriptors}')")
     database_connector.commit()
 
+    for word in words.keys():
+        temp_start = (dt_now + words[word].get('start', None)).strftime("%Y-%m-%d %H:%M:%S.%f")
+        temp_end = (dt_now + words[word].get('end', None)).strftime("%Y-%m-%d %H:%M:%S.%f")
+        result = database_cursor.execute(f"INSERT INTO words (id_image, word, word_start, word_end) VALUES ({identifier}, '{word}', '{temp_start}', '{temp_end}');")
+    database_connector.commit()
+
     return Response("ok", 200)
 
 
 @app.route("/search", methods=['post'])
 def search_process():
-    now = datetime.now().strftime("WF%Y%m%d%H%M%S")
+    dt_now = datetime.now()
+    now = dt_now.strftime("WF%Y%m%d%H%M%S")
     file = request.files['file']
     file.save(search_image.format(now))
     element = (now.replace("WF", ""), search_image.format(now))
     best_score = tree.image_search([element, ])
 
-    if not best_score or best_score[0] > 0.5:
-        return Response("Nenhuma imagem encontrada", 404)
+    extra_data = request.form.get("extra_data")
+    extra_data = json.loads(extra_data)
+    words = extra_data.get("words", "").split(", ")
+    words = "', '".join(words)
+
+    if not best_score or best_score[0] > 1:
+
+        database_cursor.execute(f"select id_image, count(id_image) from words where word in ('{words}') group by id_image order by -count(id_image);")
+        results = database_cursor.fetchall()
+        if results[0][1] > 1:
+            file = out_image_url.format("WF" + str(results[0][0]))
+            return send_file(file)
+
     else:
+
         database_cursor.execute(f"SELECT path from images where id={best_score[1]}")
-        file = database_cursor.fetchone()[0]
-        return send_file(file)
+        file = database_cursor.fetchone()
+        return send_file(file[0].replace("in", "out"))
 
 
 def write_file(data, path):

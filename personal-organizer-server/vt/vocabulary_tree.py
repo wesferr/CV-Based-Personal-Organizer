@@ -196,7 +196,10 @@ class VocabularyTree:
             score.append((s, _image_id))
 
         score.sort()
-        return score[0]
+        if score and len(score) > 0:
+            return score[0]
+        else:
+            return []
 
     def image_insert(self, image_identifier, image_path):
 
@@ -254,11 +257,3 @@ if __name__ == '__main__':
 
     tree = VocabularyTree(levels_to_use=4)
     tree.start(descriptors, len(images_list))
-    # tree.write_tree("minha_arvore.json")
-
-    # images_list = [make_image_list("./images")[0]]
-    # tree.image_search(images_list)
-
-    # image_path = make_image_list("./teste")[0]
-    # tree.image_insert(image_path)
-    # tree.write_tree("minha_arvore.json")
