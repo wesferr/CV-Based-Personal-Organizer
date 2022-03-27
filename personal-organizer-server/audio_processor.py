@@ -13,9 +13,9 @@ def speech_to_text_watson(audio_url, output_url):
 
     words_dict = {}
 
-    authenticator = IAMAuthenticator("4VsBtXi7dQ2QPjWcUV-_HV0_0Q1otdS2JwUcfNm43q4q")
+    authenticator = IAMAuthenticator()
     speech_to_text = SpeechToTextV1(authenticator=authenticator)
-    speech_to_text.set_service_url("https://api.us-south.speech-to-text.watson.cloud.ibm.com/instances/665ee44d-b432-4f48-addf-35a750a5ee16")
+    speech_to_text.set_service_url()
 
     file = open(audio_url, "rb")
     speech_result = speech_to_text.recognize(file, content_type="audio/wav", model="pt-BR_NarrowbandModel", timestamps=True, speech_detector_sensitivity=0.9, end_of_phrase_silence_time=120.0)
